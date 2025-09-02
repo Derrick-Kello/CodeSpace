@@ -2,16 +2,20 @@ import { auth } from "@/firebase/firebase";
 import React, { useState, useEffect } from "react";
 import { useSendPasswordResetEmail } from "react-firebase-hooks/auth";
 import { toast } from "react-toastify";
+import { useAuthModal } from "@/context/AuthModalContext"; // Import useAuthModal
+
 type ResetPasswordProps = {};
 
 const ResetPassword: React.FC<ResetPasswordProps> = () => {
 	const [email, setEmail] = useState("");
 	const [sendPasswordResetEmail, sending, error] = useSendPasswordResetEmail(auth);
+	const { closeModal } = useAuthModal(); // Use closeModal from context
 	const handleReset = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		const success = await sendPasswordResetEmail(email);
 		if (success) {
 			toast.success("Password reset email sent", { position: "top-center", autoClose: 3000, theme: "dark" });
+			closeModal(); // Close modal on successful reset email sent
 		}
 	};
 

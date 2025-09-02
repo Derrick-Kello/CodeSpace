@@ -1,14 +1,15 @@
-import { authModalState } from "@/atoms/authModalAtom";
+'use client';
 import { auth } from "@/firebase/firebase";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useSignInWithEmailAndPassword } from "react-firebase-hooks/auth";
-import { useSetRecoilState } from "recoil";
 import { toast } from "react-toastify";
+import { useAuthModal } from "@/context/AuthModalContext"; // Import useAuthModal
+
 type LoginProps = {};
 
 const Login: React.FC<LoginProps> = () => {
-	const setAuthModalState = useSetRecoilState(authModalState);
+	const { setAuthModalState, closeModal } = useAuthModal(); // Use setAuthModalState and closeModal from context
 	const handleClick = (type: "login" | "register" | "forgotPassword") => {
 		setAuthModalState((prev) => ({ ...prev, type }));
 	};
@@ -26,6 +27,7 @@ const Login: React.FC<LoginProps> = () => {
 			const newUser = await signInWithEmailAndPassword(inputs.email, inputs.password);
 			if (!newUser) return;
 			router.push("/");
+			closeModal(); // Close modal on successful login
 		} catch (error: any) {
 			toast.error(error.message, { position: "top-center", autoClose: 3000, theme: "dark" });
 		}

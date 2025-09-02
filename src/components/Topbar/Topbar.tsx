@@ -1,17 +1,17 @@
+'use client';
 import { auth } from "@/firebase/firebase";
 import Link from "next/link";
 import React from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import Logout from "../Buttons/Logout";
-import { useSetRecoilState } from "recoil";
-import { authModalState } from "@/atoms/authModalAtom";
 import Image from "next/image";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { BsList } from "react-icons/bs";
 import Timer from "../Timer/Timer";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { problems } from "@/utils/problems";
 import { Problem } from "@/utils/types/problem";
+import { useAuthModal } from "@/context/AuthModalContext";
 
 type TopbarProps = {
 	problemPage?: boolean;
@@ -19,7 +19,7 @@ type TopbarProps = {
 
 const Topbar: React.FC<TopbarProps> = ({ problemPage }) => {
 	const [user] = useAuthState(auth);
-	const setAuthModalState = useSetRecoilState(authModalState);
+	const { openModal } = useAuthModal();
 	const router = useRouter();
 
 	const handleProblemChange = (isForward: boolean) => {
@@ -88,7 +88,7 @@ const Topbar: React.FC<TopbarProps> = ({ problemPage }) => {
 					{!user && (
 						<Link
 							href='/auth'
-							onClick={() => setAuthModalState((prev) => ({ ...prev, isOpen: true, type: "login" }))}
+							onClick={() => openModal("login")}
 						>
 							<button className='bg-dark-fill-3 py-1 px-2 cursor-pointer rounded '>Sign In</button>
 						</Link>

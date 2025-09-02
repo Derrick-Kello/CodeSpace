@@ -1,3 +1,4 @@
+'use client';
 import { useState, useEffect } from "react";
 import PreferenceNav from "./PreferenceNav/PreferenceNav";
 import Split from "react-split";
@@ -9,8 +10,8 @@ import { Problem } from "@/utils/types/problem";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, firestore } from "@/firebase/firebase";
 import { toast } from "react-toastify";
-import { problems } from "@/utils/problems";
-import { useRouter } from "next/router";
+// import { problems } from "@/utils/problems"; // Removed as problems are fetched dynamically
+import { useRouter } from "next/navigation"; // Keep useRouter for navigation, but not for pid
 import { arrayUnion, doc, updateDoc } from "firebase/firestore";
 import useLocalStorage from "@/hooks/useLocalStorage";
 
@@ -39,9 +40,7 @@ const Playground: React.FC<PlaygroundProps> = ({ problem, setSuccess, setSolved 
 	});
 
 	const [user] = useAuthState(auth);
-	const {
-		query: { pid },
-	} = useRouter();
+	const router = useRouter(); // Keep for navigation
 
 	const handleSubmit = async () => {
 		if (!user) {
@@ -55,7 +54,7 @@ const Playground: React.FC<PlaygroundProps> = ({ problem, setSuccess, setSolved 
 		try {
 			userCode = userCode.slice(userCode.indexOf(problem.starterFunctionName));
 			const cb = new Function(`return ${userCode}`)();
-			const handler = problems[pid as string].handlerFunction;
+			const handler = eval(problem.handlerFunction as string); // Use problem.handlerFunction directly
 
 			if (typeof handler === "function") {
 				const success = handler(cb);
@@ -72,7 +71,7 @@ const Playground: React.FC<PlaygroundProps> = ({ problem, setSuccess, setSolved 
 
 					const userRef = doc(firestore, "users", user.uid);
 					await updateDoc(userRef, {
-						solvedProblems: arrayUnion(pid),
+						solvedProblems: arrayUnion(problem.id),
 					});
 					setSolved(true);
 				}
@@ -98,17 +97,17 @@ const Playground: React.FC<PlaygroundProps> = ({ problem, setSuccess, setSolved 
 	};
 
 	useEffect(() => {
-		const code = localStorage.getItem(`code-${pid}`);
+		const code = localStorage.getItem(`code-${problem.id}`);
 		if (user) {
 			setUserCode(code ? JSON.parse(code) : problem.starterCode);
 		} else {
 			setUserCode(problem.starterCode);
 		}
-	}, [pid, user, problem.starterCode]);
+	}, [problem.id, user, problem.starterCode]);
 
 	const onChange = (value: string) => {
 		setUserCode(value);
-		localStorage.setItem(`code-${pid}`, JSON.stringify(value));
+		localStorage.setItem(`code-${problem.id}`, JSON.stringify(value));
 	};
 
 	return (
@@ -134,34 +133,44 @@ const Playground: React.FC<PlaygroundProps> = ({ problem, setSuccess, setSolved 
 						</div>
 					</div>
 
-					<div className='flex'>
-						{problem.examples.map((example, index) => (
-							<div
-								className='mr-2 items-start mt-2 '
-								key={example.id}
-								onClick={() => setActiveTestCaseId(index)}
-							>
-								<div className='flex flex-wrap items-center gap-y-4'>
-									<div
-										className={`font-medium items-center transition-all focus:outline-none inline-flex bg-dark-fill-3 hover:bg-dark-fill-2 relative rounded-lg px-4 py-1 cursor-pointer whitespace-nowrap
-										${activeTestCaseId === index ? "text-white" : "text-gray-500"}
-									`}
-									>
-										Case {index + 1}
+					{problem.examples && problem.examples.length > 0 && (
+						<div className='flex'>
+							{problem.examples.map((example, index) => (
+								<div
+									className='mr-2 items-start mt-2 '
+									key={example.id}
+									onClick={() => setActiveTestCaseId(index)}
+								>
+									<div className='flex flex-wrap items-center gap-y-4'>
+										<div
+											className={`font-medium items-center transition-all focus:outline-none inline-flex bg-dark-fill-3 hover:bg-dark-fill-2 relative rounded-lg px-4 py-1 cursor-pointer whitespace-nowrap
+											${activeTestCaseId === index ? "text-white" : "text-gray-500"}
+										`}
+										>
+											Case {index + 1}
+										</div>
 									</div>
 								</div>
-							</div>
-						))}
-					</div>
+							))}
+						</div>
+					)}
 
 					<div className='font-semibold my-4'>
 						<p className='text-sm font-medium mt-4 text-white'>Input:</p>
 						<div className='w-full cursor-text rounded-lg border px-3 py-[10px] bg-dark-fill-3 border-transparent text-white mt-2'>
-							{problem.examples[activeTestCaseId].inputText}
+							{problem.examples && problem.examples.length > 0 && problem.examples[activeTestCaseId] ? (
+								problem.examples[activeTestCaseId].inputText
+							) : (
+								""
+							)}
 						</div>
 						<p className='text-sm font-medium mt-4 text-white'>Output:</p>
 						<div className='w-full cursor-text rounded-lg border px-3 py-[10px] bg-dark-fill-3 border-transparent text-white mt-2'>
-							{problem.examples[activeTestCaseId].outputText}
+							{problem.examples && problem.examples.length > 0 && problem.examples[activeTestCaseId] ? (
+								problem.examples[activeTestCaseId].outputText
+							) : (
+								""
+							)}
 						</div>
 					</div>
 				</div>

@@ -29,4 +29,6 @@ export type DBProblem = {
 	order: number;
 	videoId?: string;
 	link?: string;
+	starterCode?: string; // Add starterCode to DBProblem
+	handlerFunction?: string; // Add handlerFunction to DBProblem
 };

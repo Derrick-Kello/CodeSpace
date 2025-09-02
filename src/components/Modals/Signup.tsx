@@ -1,16 +1,16 @@
-import { authModalState } from "@/atoms/authModalAtom";
+'use client';
 import { auth, firestore } from "@/firebase/firebase";
 import { useEffect, useState } from "react";
-import { useSetRecoilState } from "recoil";
 import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { doc, setDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
+import { useAuthModal } from "@/context/AuthModalContext"; // Import useAuthModal
 
 type SignupProps = {};
 
 const Signup: React.FC<SignupProps> = () => {
-	const setAuthModalState = useSetRecoilState(authModalState);
+	const { setAuthModalState, closeModal } = useAuthModal(); // Use setAuthModalState and closeModal from context
 	const handleClick = () => {
 		setAuthModalState((prev) => ({ ...prev, type: "login" }));
 	};
@@ -38,9 +38,11 @@ const Signup: React.FC<SignupProps> = () => {
 				dislikedProblems: [],
 				solvedProblems: [],
 				starredProblems: [],
+				role: "user", // Default role for new users
 			};
 			await setDoc(doc(firestore, "users", newUser.user.uid), userData);
 			router.push("/");
+			closeModal(); // Close modal on successful registration
 		} catch (error: any) {
 			toast.error(error.message, { position: "top-center" });
 		} finally {

@@ -1,16 +1,24 @@
-import { authModalState } from "@/atoms/authModalAtom";
 import React, { useEffect } from "react";
 import { IoClose } from "react-icons/io5";
 import Login from "./Login";
 import ResetPassword from "./ResetPassword";
 import Signup from "./Signup";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { useAuthModal } from "@/context/AuthModalContext"; // Import useAuthModal
 
 type AuthModalProps = {};
 
 const AuthModal: React.FC<AuthModalProps> = () => {
-	const authModal = useRecoilValue(authModalState);
-	const closeModal = useCloseModal();
+	const { authModalState, closeModal } = useAuthModal(); // Use authModalState and closeModal from context
+
+	// Effect to handle Escape key press
+	useEffect(() => {
+		const handleEsc = (e: KeyboardEvent) => {
+			if (e.key === "Escape") closeModal();
+		};
+		window.addEventListener("keydown", handleEsc);
+		return () => window.removeEventListener("keydown", handleEsc);
+	}, [closeModal]);
+
 	return (
 		<>
 			<div
@@ -29,7 +37,7 @@ const AuthModal: React.FC<AuthModalProps> = () => {
 								<IoClose className='h-5 w-5' />
 							</button>
 						</div>
-						{authModal.type === "login" ? <Login /> : authModal.type === "register" ? <Signup /> : <ResetPassword />}
+						{authModalState.type === "login" ? <Login /> : authModalState.type === "register" ? <Signup /> : <ResetPassword />}
 					</div>
 				</div>
 			</div>
@@ -37,21 +45,3 @@ const AuthModal: React.FC<AuthModalProps> = () => {
 	);
 };
 export default AuthModal;
-
-function useCloseModal() {
-	const setAuthModal = useSetRecoilState(authModalState);
-
-	const closeModal = () => {
-		setAuthModal((prev) => ({ ...prev, isOpen: false, type: "login" }));
-	};
-
-	useEffect(() => {
-		const handleEsc = (e: KeyboardEvent) => {
-			if (e.key === "Escape") closeModal();
-		};
-		window.addEventListener("keydown", handleEsc);
-		return () => window.removeEventListener("keydown", handleEsc);
-	}, []);
-
-	return closeModal;
-}
